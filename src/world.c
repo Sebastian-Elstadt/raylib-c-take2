@@ -1,55 +1,40 @@
 #include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
 
 #include "world.h"
 #include "lighting.h"
 #include "noise.h"
 
-#define TERRAIN_WIDTH 10000.0f
-#define TERRAIN_LENGTH 10000.0f
+#define TERRAIN_WIDTH 1000.0f
+#define TERRAIN_LENGTH 1000.0f
 
 Model terrain_model;
 
 void GenerateMap(void)
 {
-    Image height_map = GenImageColor(2048, 2048, BLACK);
 
-    int grid_size = 250;
+
+    Image height_map = GenImageColor(1000, 1000, BLACK);
+
+    float scale = 100.0f;
 
     for (int y = 0; y < height_map.height; y++)
     {
         for (int x = 0; x < height_map.width; x++)
         {
-            float val = 0.0f;
-            float freq = 1.0f;
-            float amp = 1.0f;
+            float xf = x / scale;
+            float yf = y / scale;
 
-            for (int i = 0; i < 12; i++)
-            {
-                val += Perlin(x * freq / grid_size, y * freq / grid_size) * amp;
-                freq *= 1.5f;
-                amp /= 2.0f;
-            }
-
-            val *= 0.8f; // contrast
-
-            if (val > 1.0f)
-            {
-                val = 1.0f;
-            }
-            else if (val < -1.0f)
-            {   
-                val = -1.0f;
-            }
-
+            float val = Perlin(xf, yf);
             unsigned char color = (unsigned char)(((val + 1.0f) * 0.5f) * 255);
-
             ((Color *)height_map.data)[y * height_map.width + x] = (Color){color, color, color, 255};
         }
     }
 
     ExportImage(height_map, "noise.png");
 
-    Mesh terrain_mesh = GenMeshHeightmap(height_map, (Vector3){TERRAIN_WIDTH, 1000.0f, TERRAIN_LENGTH});
+    Mesh terrain_mesh = GenMeshHeightmap(height_map, (Vector3){TERRAIN_WIDTH, 100.0f, TERRAIN_LENGTH});
     terrain_model = LoadModelFromMesh(terrain_mesh);
 
     ApplyLightingShader(&terrain_model);
